@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pokédex Live Preview</title>
+  <style>
+    :root {
+      color: #f5f7ff;
+      background: #060812;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: radial-gradient(circle at top, rgba(113, 106, 255, 0.14), transparent 22%),
+        linear-gradient(180deg, #060812 0%, #020309 100%);
+      color: #f5f7ff;
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 20px 24px;
+      background: rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.3rem;
+      letter-spacing: -0.02em;
+    }
+
+    .status {
+      margin: 6px 0 0;
+      color: #a5b4fc;
+      font-size: 0.95rem;
+      line-height: 1.4;
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    button {
+      border: none;
+      border-radius: 14px;
+      padding: 12px 18px;
+      color: white;
+      background: linear-gradient(135deg, #6366f1, #4338ca);
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 10px 22px rgba(67, 56, 202, 0.25);
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 26px rgba(67, 56, 202, 0.32);
+    }
+
+    iframe {
+      flex: 1;
+      width: 100%;
+      border: 0;
+      min-height: 0;
+      height: calc(100vh - 104px);
+      background: #000;
+    }
+
+    .hint {
+      color: #c7d2fe;
+      font-size: 0.95rem;
+      margin-top: 14px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Pokédex Live Preview</h1>
+      <div class="status">Watching <strong>index.html</strong> for changes. Refreshes automatically when saved.</div>
+    </div>
+    <div class="controls">
+      <button id="reloadButton">Reload preview</button>
+    </div>
+  </header>
+  <iframe id="previewFrame" src="index.html"></iframe>
+  <div class="hint">Run <code>python3 server.py</code> and open <code>http://localhost:8000/live.html</code>.</div>
+
+  <script>
+    const preview = document.getElementById('previewFrame');
+    const status = document.querySelector('.status');
+    const reloadButton = document.getElementById('reloadButton');
+    let lastModified = '';
+
+    async function checkIndexUpdate() {
+      try {
+        const response = await fetch('index.html', { method: 'HEAD', cache: 'no-store' });
+        const modified = response.headers.get('last-modified') || '';
+        if (lastModified && modified && modified !== lastModified) {
+          status.textContent = 'Change detected — reloading preview...';
+          preview.src = 'index.html?ts=' + Date.now();
+        }
+        lastModified = modified;
+      } catch (error) {
+        status.textContent = 'Unable to poll index file updates.';
+      }
+    }
+
+    reloadButton.addEventListener('click', () => {
+      preview.src = 'index.html?ts=' + Date.now();
+    });
+
+    checkIndexUpdate();
+    setInterval(checkIndexUpdate, 2000);
+  </script>
+</body>
+</html>
